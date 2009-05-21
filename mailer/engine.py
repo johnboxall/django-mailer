@@ -1,13 +1,9 @@
 import time
-import smtplib
 import logging
 from lockfile import FileLock, AlreadyLocked, LockTimeout
-from socket import error as socket_error
-
+from django.conf import settings
 from mailer.models import Message, DontSendEntry, MessageLog
 
-from django.conf import settings
-from django.core.mail import send_mail as core_send_mail
 
 # when queue is empty, how long to wait (in seconds) before checking again
 EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
@@ -18,10 +14,7 @@ LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
 
 
 def prioritize():
-    """
-    Yield the messages in the queue in the order they should be sent.
-    """
-    
+    """Yield the messages in the queue in the order they should be sent."""
     while True:
         while Message.objects.high_priority().count() or Message.objects.medium_priority().count():
             while Message.objects.high_priority().count():
@@ -36,10 +29,7 @@ def prioritize():
 
 
 def send_all():
-    """
-    Send all eligible messages in the queue.
-    """
-    
+    """Send all eligible messages in the queue."""    
     lock = FileLock("send_mail")
     
     logging.debug("acquiring lock...")
@@ -67,17 +57,13 @@ def send_all():
                 message.delete()
                 dont_send += 1
             else:
-                try:
-                    logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8")))
-                    core_send_mail(message.subject, message.message_body, message.from_address, [message.to_address])
-                    MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
-                    message.delete()
-                    sent += 1
-                except (socket_error, smtplib.SMTPSenderRefused, smtplib.SMTPRecipientsRefused, smtplib.SMTPAuthenticationError), err:
-                    message.defer()
-                    logging.info("message deferred due to failure: %s" % err)
-                    MessageLog.objects.log(message, 3, log_message=str(err)) # @@@ avoid using literal result code
+                logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8")))
+                success = message.send()
+                if not success:
+                    message.defer()                    
                     deferred += 1
+                else:
+                    sent += 1
     finally:
         logging.debug("releasing lock...")
         lock.release()
