@@ -12,7 +12,8 @@ from django.core.mail import send_mail as core_send_mail, EmailMultiAlternatives
 
 def send_html_mail(subject, plain, html, from_email, recipient_list):
     msg = EmailMultiAlternatives(subject, plain, from_email, recipient_list)
-    msg.attach_alternative(html, "text/html")
+    if html is not None:
+        msg.attach_alternative(html, "text/html")
     msg.send()
 
 
