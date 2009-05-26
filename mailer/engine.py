@@ -1,21 +1,11 @@
+import logging
 import time
 import smtplib
-import logging
-from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as socket_error
-
+from lockfile import FileLock, AlreadyLocked, LockTimeout
 from mailer.models import Message, DontSendEntry, MessageLog
 
-from django.conf import settings
-from django.core.mail import send_mail as core_send_mail, EmailMultiAlternatives
-
-
-def send_html_mail(subject, plain, html, from_email, recipient_list):
-    msg = EmailMultiAlternatives(subject, plain, from_email, recipient_list)
-    if html is not None:
-        msg.attach_alternative(html, "text/html")
-    msg.send()
-
+        
 
 
 
@@ -80,7 +70,11 @@ def send_all():
             else:
                 try:
                     logging.info("sending message '%s' to %s" % (message.subject.encode("utf-8"), message.to_address.encode("utf-8")))
-                    send_html_mail(message.subject, message.message_body, message.message_html_body, message.from_address, [message.to_address])
+
+                    # @@@ This be ugly.
+                    send_html_mail(message.subject, message.message_body, 
+                        message.message_html_body, message.from_address, [message.to_address], send=True)
+                        
                     MessageLog.objects.log(message, 1) # @@@ avoid using literal result code
                     message.delete()
                     sent += 1
