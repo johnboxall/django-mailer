@@ -3,11 +3,8 @@ import time
 import smtplib
 from socket import error as socket_error
 from lockfile import FileLock, AlreadyLocked, LockTimeout
+from django.conf import settings
 from mailer.models import Message, DontSendEntry, MessageLog
-
-        
-
-
 
 
 # when queue is empty, how long to wait (in seconds) before checking again
