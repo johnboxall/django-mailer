@@ -18,16 +18,18 @@ PRIORITY_MAPPING = {
 
 
 
-# This is no good. it sends right away...
 def send_html_mail(subject, plain, html, from_email, recipient_list,
                    priority="medium",  send=False):
+    """
+    If send is True sends immediately - otherwise queues the message up for send later!
+    """
     from django.conf import settings
     from django.core.mail import send_mail as core_send_mail, EmailMultiAlternatives
     from django.utils.encoding import force_unicode
     from mailer.models import Message
 
     # Send immediately if in DEBUG mode.
-    if send or not settings.DEBUG:
+    if send or settings.DEBUG:
         msg = EmailMultiAlternatives(subject, plain, from_email, recipient_list)
         if html is not None:
             msg.attach_alternative(html, "text/html")

@@ -16,7 +16,7 @@ class MailerTest(TestCase):
     
     def setUp(self):
         self.old_debug = settings.DEBUG
-        settings.DEBUG = False
+        settings.DEBUG = True
         
     def tearDown(self):
         settings.DEBUG = self.old_debug
@@ -29,6 +29,6 @@ class MailerTest(TestCase):
         self.assertEquals(len(mail.outbox), 1)
 
         # Test sending without DEBUG - should create a mail instance.
-        settings.DEBUG = True
+        settings.DEBUG = False
         send_html_mail("subject", "plain", "html", "from@example.org", ["to@example.org"])
         Message.objects.get(from_address="from@example.org")
