@@ -31,7 +31,7 @@ def send_html_mail(subject, plain, html, from_email, recipient_list,
     # Send immediately if in DEBUG mode.
     if send or settings.DEBUG:
         msg = EmailMultiAlternatives(subject, plain, from_email, recipient_list)
-        if html is not None:
+        if html is not None and len(html):
             msg.attach_alternative(html, "text/html")
         msg.send()
     else:    
@@ -42,7 +42,7 @@ def send_html_mail(subject, plain, html, from_email, recipient_list,
                     from_address=from_email,
                     subject=subject,
                     message_body=plain,
-                    message_html_body=html,
+                    message_html_body=html or "",
                     priority=priority).save()        
 
 

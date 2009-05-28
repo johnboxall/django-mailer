@@ -65,7 +65,7 @@ class Message(models.Model):
     from_address = models.CharField(max_length=50)
     subject = models.CharField(max_length=100)
     message_body = models.TextField()
-    message_html_body = models.TextField()
+    message_html_body = models.TextField(default="")
     when_added = models.DateTimeField(default=datetime.now)
     priority = models.CharField(max_length=1, choices=PRIORITIES, default='2')
     # @@@ campaign?
