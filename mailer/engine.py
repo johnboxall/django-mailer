@@ -4,6 +4,7 @@ import smtplib
 from socket import error as socket_error
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 from django.conf import settings
+from mailer import send_html_email
 from mailer.models import Message, DontSendEntry, MessageLog
 
 
