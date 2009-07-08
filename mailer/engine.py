@@ -4,7 +4,7 @@ import smtplib
 from socket import error as socket_error
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 from django.conf import settings
-from mailer import send_html_email
+# from mailer import send_html_email
 from mailer.models import Message, DontSendEntry, MessageLog
 
 
@@ -14,6 +14,37 @@ EMPTY_QUEUE_SLEEP = getattr(settings, "MAILER_EMPTY_QUEUE_SLEEP", 30)
 # lock timeout value. how long to wait for the lock to become available.
 # default behavior is to never wait for the lock to be available.
 LOCK_WAIT_TIMEOUT = getattr(settings, "MAILER_LOCK_WAIT_TIMEOUT", -1)
+
+
+# @@@ Don't ask me. Strange import error?
+def send_html_mail(subject, plain, html, from_email, recipient_list,
+                   priority="medium",  send=False):
+    """
+    If send is True sends immediately - otherwise queues the message up for send later!
+    """
+    from django.conf import settings
+    from django.core.mail import send_mail as core_send_mail, EmailMultiAlternatives
+    from django.utils.encoding import force_unicode
+    from mailer.models import Message
+
+    # Send immediately if in DEBUG mode.
+    if send or settings.DEBUG:
+        msg = EmailMultiAlternatives(subject, plain, from_email, recipient_list)
+        if html is not None and len(html):
+            msg.attach_alternative(html, "text/html")
+        msg.send()
+    else:    
+        subject = force_unicode(subject)
+        priority = PRIORITY_MAPPING[priority]
+        for to_address in recipient_list:
+            Message(to_address=to_address,
+                    from_address=from_email,
+                    subject=subject,
+                    message_body=plain,
+                    message_html_body=html or "",
+                    priority=priority).save()   
+
+
 
 
 def prioritize():
